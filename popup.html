@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html style="width: 350px;">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapy Tracker Pro</title>
+    <style>
+        :root { --neon: #00ffaa; --bg: #121212; --card: #1e1e1e; --text: #eee; --danger: #ff4444; }
+        html, body { width: 350px; margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
+        .header { flex-shrink: 0; display: flex; justify-content: center; border-bottom: 1px solid #333; padding: 15px; background: var(--bg); }
+        h2 { font-size: 18px; margin: 0; color: var(--neon); text-transform: uppercase; letter-spacing: 2px; font-weight: 900; }
+        .content-area { flex-grow: 1; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
+        
+        /* Panel Statystyk */
+        .live-panel { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #333; display: none; }
+        .live-panel.active { display: block; animation: slideDown 0.3s ease-out; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+        .stat-item { background: #252525; padding: 6px 10px; border-radius: 6px; border-left: 3px solid var(--neon); font-family: monospace; font-size: 12px; }
+        .dimension-badge { font-size: 10px; padding: 3px 8px; border-radius: 12px; float: right; font-weight: 900; color: #000; background: var(--neon); text-transform: uppercase; }
+
+        /* Nick i Ulubione */
+        .field-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 11px; color: #888; text-transform: uppercase; font-weight: bold; }
+        input[type="text"] { width: 100%; background: var(--card); border: 1px solid #444; border-radius: 8px; padding: 10px; color: white; box-sizing: border-box; outline: none; font-size: 14px; }
+        
+        .fav-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+        .fav-chip { background: #2a2a2a; border-radius: 6px; border: 1px solid #333; display: flex; align-items: center; overflow: hidden; }
+        .fav-name { padding: 4px 8px; font-size: 11px; cursor: pointer; }
+        .fav-delete { background: rgba(255, 68, 68, 0.1); color: var(--danger); padding: 4px 8px; border-left: 1px solid #333; cursor: pointer; font-weight: bold; }
+        .fav-delete:hover { background: var(--danger); color: white; }
+
+        .btn-group { display: flex; gap: 8px; margin-top: 10px; }
+        button { flex: 1; background: #2a2a2a; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
+        .btn-copy { border: 1px solid var(--neon); color: var(--neon); }
+        .btn-copy:hover { background: var(--neon); color: #000; }
+        #addFav { border: 1px solid #555; }
+        #addFav:hover { border-color: var(--neon); color: var(--neon); }
+
+        .card { background: var(--card); padding: 12px; border-radius: 10px; border: 1px solid #333; }
+        input[type="range"] { width: 100%; accent-color: var(--neon); cursor: pointer; }
+
+        /* --- NOWY PRZYCISK AKTYWACJI (Toggle Switch) --- */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { 
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; 
+            background-color: #333; transition: .4s; border-radius: 34px; border: 1px solid #444;
+        }
+        .slider:before { 
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; 
+            background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        input:checked + .slider { background-color: var(--neon); border-color: var(--neon); }
+        input:checked + .slider:before { transform: translateX(24px); }
+        /* Efekt poświaty gdy aktywny */
+        input:checked + .slider { box-shadow: 0 0 10px rgba(0, 255, 170, 0.4); }
+
+        .footer { flex-shrink: 0; padding: 15px; text-align: center; border-top: 1px solid #333; }
+        .signature { font-size: 14px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; display: inline-block; background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rainbow 4s linear infinite; }
+        
+        @keyframes rainbow { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="header"><h2>Rapy Tracker Pro</h2></div>
+    <div class="content-area">
+        <div id="livePanel" class="live-panel">
+            <span id="dimBadge" class="dimension-badge">---</span>
+            <div style="font-size: 14px; font-weight: bold;" id="displayNick">Namierzanie...</div>
+            <div class="stats-grid">
+                <div class="stat-item">X: <span id="statX">-</span></div>
+                <div class="stat-item">Z: <span id="statZ">-</span></div>
+                <div class="stat-item">Y: <span id="statY">-</span></div>
+                <div class="stat-item">Zoom: <span id="statZoom">-</span></div>
+            </div>
+            <div class="btn-group">
+                <button class="btn-copy" id="copyCoords">📋 KOPIUJ /TP</button>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <label>Nazwa gracza</label>
+            <input type="text" id="nick" placeholder="Wpisz nick...">
+            <button id="addFav" style="margin-top: 5px;">⭐ DODAJ DO ULUBIONYCH</button>
+            <div class="fav-list" id="favList"></div>
+        </div>
+
+        <div class="card">
+            <label>Zoom: <span id="zoomVal" style="color:var(--neon)">600</span></label>
+            <input type="range" id="zoom" min="100" max="4000" step="100" value="600">
+        </div>
+
+        <div class="card toggle-row">
+            <span style="font-weight: bold; font-size: 13px; letter-spacing: 1px;">STATUS SYSTEMU</span>
+            <label class="switch">
+                <input type="checkbox" id="toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+    <div class="footer"><div class="signature">Created by Flamstak</div></div>
+    <script src="popup.js"></script>
+</body>
+</html>

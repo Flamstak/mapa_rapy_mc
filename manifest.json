@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Rapy Tracker Flamstak Edition",
+  "version": "2.1",
+  "permissions": ["storage", "clipboardWrite"],
+  "host_permissions": ["https://mapa.rapy.gg/*"],
+  "action": { "default_popup": "popup.html" },
+  "content_scripts": [
+    {
+      "matches": ["https://mapa.rapy.gg/*"],
+      "js": ["bridge.js"]
+    },
+    {
+      "matches": ["https://mapa.rapy.gg/*"],
+      "js": ["content.js"],
+      "world": "MAIN"
+    }
+  ]
+}
